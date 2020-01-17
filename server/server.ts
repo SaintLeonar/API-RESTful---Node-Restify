@@ -1,10 +1,19 @@
 import * as restify from 'restify';
 import { environment } from '../common/environment';
+import { Router } from '../common/router';
+import * as mongoose from 'mongoose';
 
 export class Server {
 	application: restify.Server;
 
-	initRoutes(): Promise<any> {
+	initializeDb(): mongoose.MongooseThenable {
+		(<any>mongoose).Promise = global.Promise;
+		return mongoose.connect(environment.db.url, {
+			useMongoClient: true
+		});
+	}
+
+	initRoutes(routers: Router[]): Promise<any> {
 		return new Promise((resolve, reject) => {
 			try {
 				// CRIA O SERVIDOR
@@ -15,28 +24,10 @@ export class Server {
 
 				this.application.use(restify.plugins.queryParser());
 
-				//rotas
-
-				this.application.get('/info', (req, resp, next) => {
-					if (req.userAgent().includes('MSIE 7.0')) {
-						//resp.status(400);
-						//resp.json({ message: 'Please, update your browser' });
-
-						let error: any = new Error();
-						error.statusCode = 400;
-						error.message = 'Please, update your browser';
-						return next(error);
-					}
-
-					resp.json({
-						browser: req.userAgent(), // Informações do sistema e browser/software de requisição
-						method: req.method, // Informações do método utilizado
-						url: req.url, // URL do browser
-						path: req.path(), // Caminho/ Rota da requisição
-						query: req.query // Parametros de URL
-					});
-					return next();
-				});
+				//Percorre o array de rotas e aplicando cada uma delas
+				for (let router of routers) {
+					router.applyRoutes(this.application);
+				}
 
 				// DEFINIÇÃO DA PORTA
 				this.application.listen(environment.server.port, () => {
@@ -48,7 +39,16 @@ export class Server {
 		});
 	}
 
-	bootstrap(): Promise<Server> {
-		return this.initRoutes().then(() => this);
+	/*
+		Método bootstrap é o método de chamada principal da aplicação.
+		Nos parâmentros recebe: Um array de rotas dos recursos (default: vazio)
+		O método é do tipo Promisse<Server>
+		Retorna a inicialização do Banco de Dados e
+		        a inicialização de todas as rotas da aplicação
+	*/
+	bootstrap(routers: Router[] = []): Promise<Server> {
+		return this.initializeDb().then(() =>
+			this.initRoutes(routers).then(() => this)
+		);
 	}
 }

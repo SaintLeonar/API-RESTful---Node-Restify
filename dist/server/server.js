@@ -2,8 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const restify = require("restify");
 const environment_1 = require("../common/environment");
+const mongoose = require("mongoose");
 class Server {
-    initRoutes() {
+    initializeDb() {
+        mongoose.Promise = global.Promise;
+        return mongoose.connect(environment_1.environment.db.url, {
+            useMongoClient: true
+        });
+    }
+    initRoutes(routers) {
         return new Promise((resolve, reject) => {
             try {
                 // CRIA O SERVIDOR
@@ -12,25 +19,10 @@ class Server {
                     version: '1.0.0'
                 });
                 this.application.use(restify.plugins.queryParser());
-                //rotas
-                this.application.get('/info', (req, resp, next) => {
-                    if (req.userAgent().includes('MSIE 7.0')) {
-                        //resp.status(400);
-                        //resp.json({ message: 'Please, update your browser' });
-                        let error = new Error();
-                        error.statusCode = 400;
-                        error.message = 'Please, update your browser';
-                        return next(error);
-                    }
-                    resp.json({
-                        browser: req.userAgent(),
-                        method: req.method,
-                        url: req.url,
-                        path: req.path(),
-                        query: req.query // Parametros de URL
-                    });
-                    return next();
-                });
+                //Percorre o array de rotas e aplicando cada uma delas
+                for (let router of routers) {
+                    router.applyRoutes(this.application);
+                }
                 // DEFINIÇÃO DA PORTA
                 this.application.listen(environment_1.environment.server.port, () => {
                     resolve(this.application);
@@ -41,8 +33,8 @@ class Server {
             }
         });
     }
-    bootstrap() {
-        return this.initRoutes().then(() => this);
+    bootstrap(routers = []) {
+        return this.initializeDb().then(() => this.initRoutes(routers).then(() => this));
     }
 }
 exports.Server = Server;
