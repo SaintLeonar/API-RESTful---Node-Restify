@@ -22,7 +22,9 @@ export class Server {
 					version: '1.0.0'
 				});
 
+				// Instalando plugins de parse
 				this.application.use(restify.plugins.queryParser());
+				this.application.use(restify.plugins.bodyParser());
 
 				//Percorre o array de rotas e aplicando cada uma delas
 				for (let router of routers) {

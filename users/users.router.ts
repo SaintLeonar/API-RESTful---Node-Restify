@@ -19,7 +19,17 @@ class UsersRouter extends Router {
 					resp.json(user);
 					return next();
 				}
-				resp.send(404);
+				resp.status(404);
+				return next();
+			});
+		});
+
+		application.post('/users', (req, resp, next) => {
+			let user = new User(req.body);
+			resp.status(201);
+			user.save().then((user) => {
+				user.password = undefined;
+				resp.json(user);
 				return next();
 			});
 		});
