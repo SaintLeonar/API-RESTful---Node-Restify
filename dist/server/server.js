@@ -33,6 +33,13 @@ class Server {
             }
         });
     }
+    /*
+        Método bootstrap é o método de chamada principal da aplicação.
+        Nos parâmentros recebe: Um array de rotas dos recursos (default: vazio)
+        O método é do tipo Promisse<Server>
+        Retorna a inicialização do Banco de Dados e
+                a inicialização de todas as rotas da aplicação
+    */
     bootstrap(routers = []) {
         return this.initializeDb().then(() => this.initRoutes(routers).then(() => this));
     }

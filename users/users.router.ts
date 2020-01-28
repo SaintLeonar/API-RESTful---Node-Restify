@@ -1,11 +1,12 @@
 import { Router } from '../common/router';
 import * as restify from 'restify';
 import { User } from './users.model';
+import * as mongoose from 'mongoose';
 
 class UsersRouter extends Router {
 	applyRoutes(application: restify.Server) {
 		application.get('/users', (req, resp, next) => {
-			User.findAll().then((users) => {
+			User.find().then((users) => {
 				resp.json(users);
 				return next();
 			});
@@ -16,14 +17,10 @@ class UsersRouter extends Router {
 				if (user) {
 					// se encontrou o usuario
 					resp.json(user);
-					resp.status(200);
 					return next();
 				}
-
-				let error: any = new Error();
-				error.statusCode = 404;
-				error.message = 'Usuário não encontrado';
-				return next(error);
+				resp.send(404);
+				return next();
 			});
 		});
 	}
