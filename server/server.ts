@@ -2,6 +2,7 @@ import * as restify from 'restify';
 import { environment } from '../common/environment';
 import { Router } from '../common/router';
 import * as mongoose from 'mongoose';
+import { mergePatchBodyParser } from './merge-patch.parser';
 
 export class Server {
 	application: restify.Server;
@@ -25,6 +26,7 @@ export class Server {
 				// Instalando plugins de parse
 				this.application.use(restify.plugins.queryParser());
 				this.application.use(restify.plugins.bodyParser());
+				this.application.use(mergePatchBodyParser);
 
 				//Percorre o array de rotas e aplicando cada uma delas
 				for (let router of routers) {
